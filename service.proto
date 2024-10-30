@@ -1,0 +1,24 @@
+/* fajl service.proto definiše komunikaciju između klijenta i servera tj. 
+   definiše RPC metodu MotionDetection, koja prima poruku MotionDetectionRequest  i  vraća
+   odgovor MotionDetectionReply. */
+
+syntax = "proto3";
+
+service MotionDetectionService{
+  rpc MotionDetection (MotionDetectionRequest) returns (MotionDetectionReply);
+}
+
+message MotionDetectionRequest {
+  string name = 1;
+}
+message MotionDetectionReply {
+  string message = 1;
+}
+
+/* Nakon sto napisemo ovaj .proto fajl, koristimo alat -protoc- za generisanje:
+    -   service_pb2.py      (definicije poruka)
+    -   service_pb2_grpc.py (definicije servisa)
+    
+  Ovi fajlovi se automatski generišu iz .proto fajla komandom
+  python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. service.proto
+*/
