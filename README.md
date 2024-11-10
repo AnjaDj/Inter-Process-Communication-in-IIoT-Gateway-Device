@@ -1,6 +1,8 @@
 # Kernel-Space Driver Development and gRPC-Based Communication for an Autonomous Vehicle Detection and Imaging System
 
-I am developing a system that integrates an IR distance sensor with an ADC 12 click, emphasizing the creation of kernel-space drivers for both the ADC and a camera. <br>
-The system detects a passing vehicle through the IR sensor and relays this information to a user-space application -> `main1.py`.<br> 
-Upon receiving the signal, `main1.py` sends a gRPC message to another user-space application -> `main2.py`, which subsequently triggers the camera driver to capture the vehicle’s license plate. <br>
-This project focuses on robustly implementing the ADC and camera drivers in kernel space, alongside building two user-space applications that communicate seamlessly using gRPC messaging.
+I am developing a system that integrates an IR-distance-sensor with an ADC-12-click as input side, and camera at output side.  <br><br>
+
+The system measures the distance between IR-distance-sensor and objects in front of it. Those analog values are sent to ADC. Converted values are sent to RPI via I2C communication interface.<br> 
+client.py reads data from ADC and checks whether a nearby object has been detected and sends gRPC message if nearby object has been detected.<br><br>
+
+server.py receives gRPC request and responds to it by taking a picture.
