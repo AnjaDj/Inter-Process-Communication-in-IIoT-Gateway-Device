@@ -28,7 +28,12 @@ class MotionDetectionServiceServicer(service_pb2_grpc.MotionDetectionServiceServ
         
         return service_pb2.MotionDetectionReply(message=reply_message)
 
-# Running gRPC server
+"""
+    Sets up and runs a gRPC server
+    
+    :param : None
+    :return: None
+"""
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     service_pb2_grpc.add_MotionDetectionServiceServicer_to_server(MotionDetectionServiceServicer(), server)
@@ -43,11 +48,17 @@ def serve():
     except KeyboardInterrupt:
         logging.info("Shutting down server...")
         print("Shutting down server...")
-        server.stop(0)
+        server.stop(0) # Stops the server immediately when a KeyboardInterrupt is raised (e.g., CTRL+C)
 
+"""
+    Creates timestamp
+    
+    :param : None
+    :return: timestamp in the format YYYYMMDDHHMMSS
+"""
 def create_time_stamp():
-    now = datetime.now()	# current time
-    timestamp = now.strftime("%Y%m%d%H%M%S") # Desired formating
+    current_time = datetime.now()
+    timestamp = current_time.strftime("%Y%m%d%H%M%S") # formating
     return timestamp
 
 if __name__ == '__main__':
