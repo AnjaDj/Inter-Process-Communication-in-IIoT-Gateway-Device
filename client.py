@@ -40,31 +40,34 @@ def close_driver(fd):
 
 
 """
-    Reads data from ADC
+    Reads and Interprets data from ADC
     
     :param fd: 			File descriptor
     :param num_bytes: 	Number of bytes to be read
-    :return: 			Data read from driver
+    :return: 			Integer data received from ADC
 """
 def read_adc(fd, num_bytes):
     try:
-		# data_raw is an array of num_bytes bytes - raw binary bytes read from ADC
+		# data_raw is an array of num_bytes bytes - raw binary bytes received from ADC driver
         data_raw = os.read(fd, num_bytes)
 
-        # Interpretation of array of bytes into integer number
-        data_num = int.from_bytes(data_raw, byteorder='little')  # 'little' for little-endian format
+        # Interpretation of array of bytes into integer
+        data_num = int.from_bytes(data_raw, byteorder='little')  # little-endian format
 
-        print(f"Read data from ADC: {data_num}")
+        print(f"Data received from ADC: {data_num}")
         return data_num
         
     except OSError as e:
-        print(f"Failed to read from ADC driver: {e}")
+        print(f"Failed to receive data from ADC: {e}")
         return None
 
 
 """
-    Gets data from ADC and checks whether a nearby object has been detected.
+    Checks whether a nearby object has been detected.
     Sends gRPC message if nearby object has been detected.
+    
+    :param : None
+    :return: None		
 """
 def sensor_run():
 	
@@ -80,6 +83,12 @@ def sensor_run():
         time.sleep(100 / 1000) #100ms
 			
 
+"""
+    Main function of client application. Configures all dependencies.
+    
+    :param : None
+    :return: None		
+"""
 def run():
     global adc_fd, stub, end_program	# Access global variables
 
