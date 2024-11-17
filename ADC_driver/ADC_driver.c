@@ -11,31 +11,29 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Anja Dj.");
 MODULE_DESCRIPTION("ADC Driver");
-MODULE_VERSION("3.0");
+MODULE_VERSION("4.0");
 
 #define I2C_CLIENT_NAME ("CLIENT_ADC")
 #define I2C_CLIENT_ADDR (0x48)
 
-uint32_t avg = 0;
-
 static struct i2c_adapter *i2c_client_adapter = NULL;
 static struct i2c_client  *i2c_client_device  = NULL;
 
-/* Timer */
+/* Timer dependencies */
 static struct hrtimer mytimer;
 static ktime_t kt;
 
-/* turns on the A/D converter and begins conversions 
- *   SD - 1 (Single Ended Input)
- *   C2-C0 - 001 (CH1 Selected)
- *   PD1-PD0 - 11 (Internal Reference ON and A/D Converter ON)
+/* message for turning on the A/D conversion
+ *   SD      - 1   (Single Ended Input)
+ *   C2-C0   - 001 (CH1 Selected)
+ *   PD1-PD0 - 11  (Internal Reference ON and A/D Converter ON)
  */
 const char INIT_ADC_CONVERSION_MESSAGE = 0x9c;
 
-/* turns off the A/D 
- *   SD - 1 (Single Ended Input)
- *   C2-C0 - 001 (CH1 Selected)
- *   PD1-PD0 - 00 (Power Down Between A/D Converter Conversions)
+/* message for turning off the A/D conversion
+ *   SD      - 1   (Single Ended Input)
+ *   C2-C0   - 001 (CH1 Selected)
+ *   PD1-PD0 - 00  (Power Down Between A/D Converter Conversions)
  */
 const char SHUTDOWN_ADC_CONVERSION_MESSAGE = 0x90;
 
@@ -44,33 +42,36 @@ int adc_driver_major;
 /*  Each 12-bit data word is returned in two bytes */
 char digital_voltage_value[2];
 
-/* Timer callback, called with hrtimer_start  */
+/* Timer callback function */
 enum hrtimer_restart timer_callback(struct hrtimer* timer);
 
+/* List of I2C devices supported by this driver (ADC driver) */
 static const struct i2c_device_id supported_devices[] = {
     { I2C_CLIENT_NAME , 0},
     { }
 };
 
-/* Function called when the slave has been found. */
+/* Function called when the slave (ADC) has been found */
 static int driver_probe(struct i2c_client *client)
 {
 	return 0;
 }
-/* Function called when the slave (ADC driver) has been removed */
+/* Function called when the slave (ADC) has been removed */
 static void  driver_remove(struct i2c_client *client )
 {
 	i2c_master_send(i2c_client_device, &SHUTDOWN_ADC_CONVERSION_MESSAGE, 1);
 	return;
 }
+
 MODULE_DEVICE_TABLE(i2c, supported_devices);
+
 static struct i2c_driver driver = {
     .driver = {
         .name   = I2C_CLIENT_NAME,
         .owner  = THIS_MODULE,
     },
-    .remove     = driver_remove, 	          // @remove:  Callback for device unbinding. Function called when the slave has been removed
-    .probe 	= driver_probe,
+    .remove     = driver_remove, 	   // @remove: Function called when the slave (ADC) has been removed
+    .probe 	    = driver_probe,        // @probe:  Function called when the slave (ADC) has been found
     .id_table   = supported_devices    // @id_table:  List of I2C devices supported by this driver
 };
 
@@ -80,53 +81,55 @@ static struct i2c_board_info   board_info = {
 };
 
 
-////////////////////////////////////////// FILE OPERATIONS //////////////////////////////////////////////////////////// 
-/// U Linux-u  je sve fajl. Linux periferiju/hardver vidi kao fajl.
+/*FILE OPERATIONS*/
 
-/* This fuction will be called when we open the Device file */
+
+/* Function called when the Device file has been opened */
 static int etx_open(struct inode *inode, struct file *filp)
 {
     return 0;
 }
-/* This fuction will be called when we close the Device file */
+/* Function called when the Device file has been closed */
 static int etx_release(struct inode *inode, struct file *filp)
 {
     return 0;
 }
-/* This fuction will be called when we write the Device file */
+/* Function called when the Device file has been written in */
 static ssize_t etx_write(struct file *filp, const char *buf, size_t len, loff_t *off)
 {
     return 0;
 }
-
-/* This fuction will be called when we read the Device file */
+/* Function called when the Device file has been read from */
 static ssize_t etx_read(struct file *filp, char *buf, size_t len, loff_t *f_pos)
 {
-    /* Size of valid data in gpio_driver - data to send in user space. */
+    /* Size of valid data in bytes received from ADC */
     int data_size = 0;
 
-    avg = 0;
+    /* Average data value */
+    uint32_t avg = 0;
 	
+    // 20 conversions
 	for(int i = 0; i < 20; i++)
 	{
     
-	    /* Slanje poruke za pokretanje ADC konverzije */
+	    /* Master (RPi) sends a message to the client (ADC) to start AD conversion */
 	    i2c_master_send(i2c_client_device, &INIT_ADC_CONVERSION_MESSAGE, 1);
 	    
 	    hrtimer_start(&mytimer, ktime_set(1,0), CLOCK_MONOTONIC);
 
-	    /* Citanje podataka sa senzora (I2C klijenta) u 2B buffer*/
+	    /* Receiving 2bytes raw converted data from ADC */
 	    i2c_master_recv(i2c_client_device, digital_voltage_value, 2);
 		
+        /* Master (RPi) sends a message to the client (ADC) to end AD conversion */
 	    i2c_master_send(i2c_client_device, &SHUTDOWN_ADC_CONVERSION_MESSAGE, 1);
 	
 	    data_size = strlen(digital_voltage_value);
 	    
-	    // ADC kao prvi bajt salje bajt NAJVECE TEZINE
+	    // ADC as first byte sends the MOST SIGNIFICANT byte
 	    uint16_t temp = digital_voltage_value[0]<<8 | digital_voltage_value[1];
 	    avg += temp;
-	
 	}
+    
 	avg /= 20;
 	char uradi[4];
 	uradi[0] = avg & 0x000000ff;
@@ -136,32 +139,31 @@ static ssize_t etx_read(struct file *filp, char *buf, size_t len, loff_t *f_pos)
 	
 	printk("avg = %x\n", avg);
 	
-	/* Kopiramo podatke iz kernela u korisnički prostor */
+	/* Sends data from kernel to user space */
 	if (copy_to_user(buf, uradi, 4) != 0)
 	{
 	    printk(KERN_INFO "copy_to_user(buf,avg,4)");
-            return -EFAULT;
-        }
-        else
-        {
-            (*f_pos) += data_size;
-            *f_pos = 0;
-            return data_size;
-        }
+        return -EFAULT;
+    }
+    else
+    {
+        (*f_pos) += data_size;
+        *f_pos = 0;
+        return data_size;
+    }
 }
 
-/* Structure that declares the usual file access functions. */
+/* Structure declaring usual file access functions */
 static struct file_operations adc_fops =
 {
     .owner    = THIS_MODULE,
-    .read     = etx_read,			// called when we read   the Device file
-    .write    = etx_write, 			// called when we write   the Device file 
-    .open     = etx_open,			// called when we open  the Device file
-    .release  = etx_release,       // called when we close the Device file
+    .read     = etx_read,			/* Function called when the Device file has been read from */
+    .write    = etx_write, 			/* Function called when the Device file has been written in */
+    .open     = etx_open,			/* Function called when the Device file has been opened */
+    .release  = etx_release,        /* Function called when the Device file has been closed */
 };
 
 
-/////////////////////////////// MODULE //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* Module Init function */
 static int      __init etx_driver_init(void)
@@ -209,8 +211,8 @@ static void __exit etx_driver_exit(void)
 {
 	printk(KERN_INFO "Removing adc_driver module\n");
 	hrtimer_cancel(&mytimer);
-	unregister_chrdev(adc_driver_major, "adc_driver"); // uklanjanje char uredjaja
-	i2c_unregister_device(i2c_client_device);  // device destroy
+	unregister_chrdev(adc_driver_major, "adc_driver"); 
+	i2c_unregister_device(i2c_client_device); 
 	i2c_del_driver(&driver);
 }
 
