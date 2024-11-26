@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service ObjectProximityDetectionService{
+  rpc ObjectProximityDetection (ObjectProximityDetectionRequest) returns (ObjectProximityDetectionReply);
+}
+
+message ObjectProximityDetectionRequest {
+  string message = 1;
+  int32 object_proximity_distance = 2;
+}
+message ObjectProximityDetectionReply {
+  string message = 1;
+}
