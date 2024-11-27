@@ -23,4 +23,12 @@
      ~grpc/cmake/build$ make -j 4
      ~grpc/cmake/build$ make install
      ~grpc/cmake/build$ popd
-     
+5. Build the project<br>
+    in `~/grpc/examples/protos/` save .proto file<br>
+    in `~/grpc/examples/cpp/` create new directory myproject containing source .cc code<br>
+    ```bash
+    ~/grpc$ cd examples/cpp/myproject
+    ~/grpc/examples/cpp/myproject$ mkdir -p cmake/build
+    ~/grpc/examples/cpp/myproject$ pushd cmake/build
+    ~/grpc/examples/cpp/myproject/cmake/build$ cmake -DCMAKE_PREFIX_PATH=$LOCAL_INSTALL_DIR ../..
+    ~/grpc/examples/cpp/myproject/cmake/build$ make -j 4
