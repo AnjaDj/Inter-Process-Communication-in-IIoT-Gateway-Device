@@ -1,5 +1,7 @@
 # gRPC
 ## Build and locally install gRPC and Protocol Buffers for C++
+Prerequisites<br>
+ - cmake 3.16 or later (https://vitux.com/how-to-install-cmake-on-ubuntu/)
 1. Configures a directory for locally installed packages and ensures the executables are easily accessible from the command line<br>
     ```bash
      ~$ export LOCAL_INSTALL_DIR=$HOME/.local
