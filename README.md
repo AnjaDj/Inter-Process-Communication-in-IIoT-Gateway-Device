@@ -27,7 +27,7 @@ Prerequisites<br>
      ~grpc/cmake/build$ popd
 5. Build the project<br>
     in `~/grpc/examples/protos/` save .proto file<br>
-    in `~/grpc/examples/cpp/` create new directory `myproject` containing source .cc code<br>
+    in `~/grpc/examples/cpp/` create new directory `myproject` containing source .cc code and CMakeLists.txt<br>
     ```bash
     ~/grpc$ cd examples/cpp/myproject
     ~/grpc/examples/cpp/myproject$ mkdir -p cmake/build
