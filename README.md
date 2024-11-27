@@ -32,3 +32,9 @@
     ~/grpc/examples/cpp/myproject$ pushd cmake/build
     ~/grpc/examples/cpp/myproject/cmake/build$ cmake -DCMAKE_PREFIX_PATH=$LOCAL_INSTALL_DIR ../..
     ~/grpc/examples/cpp/myproject/cmake/build$ make -j 4
+6. Run the project from the project `build` directory<br>
+    ```bash
+    ~/grpc/examples/cpp/myproject/cmake/build$ ./name
+
+
+## Build and locally install gRPC and Protocol Buffers for Python
