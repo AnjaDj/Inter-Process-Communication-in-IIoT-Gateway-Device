@@ -1,8 +1,26 @@
+"""ADC.py
+
+This Python script implements several functionalities:
+
+    1. Communication with the DRIVER (/dev/ADC_driver) via following functions
+        - open_driver(device_path) 
+        - close_driver(fd) 
+        - read_adc(fd, num_bytes)
+    2. Reading and interpreting raw data got from ADC
+        - read_adc(fd, num_bytes)
+    3. Establishing gRPC communication with the Main gRPC-server
+    
+Scripts assignment is to read raw data got from ADC, interpret it and if
+nearby object has been detected, to send gRPC-request to Main gRPC-server
+
+"""
+
 import os
 import time
 import grpc
 import logging
 import threading
+import config_data
 import objectProximityDetectionService_pb2
 import objectProximityDetectionService_pb2_grpc
 
@@ -11,8 +29,12 @@ logging.basicConfig(filename='ADC.log',
                     level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-ADC_DRIVER_DEVICE = "/dev/ADC_driver"	# device path, path to the driver file
+# path to the config file in JSON format                    
+config_path = "config.json"
+
+ADC_DRIVER_DEVICE = "/dev/ADC_driver"	# device path to the driver file
 end_program = False 					# flag to end the program
+channel     = None
 adc_fd      = None						# file descriptor
 stub        = None
 
@@ -50,7 +72,7 @@ def close_driver(fd):
 
 
 """
-    Reads and Interprets data from ADC
+    Reads and Interprets raw data got from ADC
     
     :param fd: 			File descriptor
     :param num_bytes: 	Number of bytes to be read
@@ -76,28 +98,30 @@ def read_adc(fd, num_bytes):
 
 """
     Checks whether a nearby object has been detected.
-    Sends gRPC message if nearby object has been detected.
+    Sends gRPC-request to the Main gRPC-server if nearby object has been detected.
     
     :param : None
     :return: None		
 """
 def sensor_run():
     
-    global adc_fd, stub, end_program    # Access global variables
-    THRESHOLD = 0x00000401 				# Define the threshold for detecting objects
+    global adc_fd, stub, channel, end_program    # Access global variables
+    THRESHOLD = 0x00000401 				         # Define the threshold for detecting objects at any distance
 
     # Open ADC driver
     adc_fd = open_driver(ADC_DRIVER_DEVICE)
     if adc_fd is None:
         return 
         
-    # Connect to the local Main gRPC server    
+    # Connect to the local Main gRPC-server    
+    server_address = config_data.read_server_address_from_config_file(config_path, 'main')
+    
     try:
-        with grpc.insecure_channel('127.0.0.1:50051') as channel:
-            stub = objectProximityDetectionService_pb2_grpc.ObjectProximityDetectionServiceStub(channel)
+        channel = grpc.insecure_channel(server_address)
+        stub    = objectProximityDetectionService_pb2_grpc.ObjectProximityDetectionServiceStub(channel)
     except grpc.RpcError as e:
-        logging.critical(f"ADC gRPC-client failed to connect to the main gRPC-server: {e}")
-        print(f"ADC gRPC-client failed to connect to the main gRPC-server: {e}\n")
+        logging.critical(f"ADC gRPC-client failed to connect to the Main gRPC-server: {e}")
+        print(f"ADC gRPC-client failed to connect to the Main gRPC-server: {e}\n")
     finally:
         close_driver(adc_fd)
         
@@ -108,10 +132,12 @@ def sensor_run():
         if data > THRESHOLD:
             logging.info("Object Detected. ADC gRPC-client sends gRPC-request to Main gRPC-server.")
             print("Object Detected. ADC gRPC-client sends gRPC-request to Main gRPC-server.\n")
+            
             request  = objectProximityDetectionService_pb2.ObjectProximityDetectionRequest(message="Object Detected",object_proximity_distance=data)
-            response = stub.ObjectProximityDetection(request)
-            logging.info(f"ADC gRPC client received gRPC reply from Main gRPC-server: {response.message}")
-            print(f"ADC gRPC client received gRPC reply from Main gRPC-server: {response.message}\n")
+            reply    = stub.ObjectProximityDetection(request)
+            
+            logging.info(f"ADC gRPC client received gRPC-reply from Main gRPC-server: {reply.message}")
+            print(f"ADC gRPC client received gRPC-reply from Main gRPC-server: {reply.message}\n")
         
         time.sleep(100 / 1000) #100ms
     
