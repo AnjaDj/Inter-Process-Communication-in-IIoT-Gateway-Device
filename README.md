@@ -34,7 +34,20 @@
     ~/grpc/examples/cpp/myproject/cmake/build$ make -j 4
 6. Run the project from the project `build` directory<br>
     ```bash
-    ~/grpc/examples/cpp/myproject/cmake/build$ ./name
-
+    ~/grpc/examples/cpp/myproject/cmake/build$ ./app
 
 ## Build and locally install gRPC and Protocol Buffers for Python
+Prerequisites<br>
+ - Python 3.7 or higher
+ - pip version 9.0.1 or higher
+
+1. Install gRPC
+   ```bash
+   ~$ python3 -m pip install grpcio
+2. Install gRPC tools
+   ```bash
+   ~$ python3 -m pip install grpcio-tools
+3. Build the project<br>
+   create new directory `myproject` containing .proto file and source .py code<br>
+5. Run the project<br>
+   from project directory `myproject` in terminal run `python3 app.py`
