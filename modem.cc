@@ -3,11 +3,10 @@
 #include <memory>
 #include <csignal> 
 #include <atomic>
-
 #include <grpcpp/grpcpp.h>
 #include "logger.h"
+#include "config.h"
 #include "modemCommunication.grpc.pb.h"
-
 #include <chrono>   
 #include <thread>    
 
@@ -22,8 +21,11 @@ using modemCommunication::ModemCommunicationReply;
 using modemCommunication::ModemCommunicationRequest;
 
 std::atomic<bool> server_running(true); // flag
+// Create logger instance
+Logger logger("modem.log");
+// path to the config file in JSON format  
+std::string config_path = "config_modem.json";                  
 
-Logger logger("modem.log"); // Create logger instance
 
 class ModemCommunicationServiceImpl final : public ModemCommunicationService::Service {
 public:
@@ -45,20 +47,33 @@ public:
 };
 
 void serve_main() {
-    std::string server_address("127.0.0.1:50052");
-    ModemCommunicationServiceImpl service;
-
-    ServerBuilder builder;
-    // Listen on the given address without any authentication mechanism.
-    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-    builder.RegisterService(&service);
-
-    std::unique_ptr<Server> server(builder.BuildAndStart());
     
-    logger.log(INFO, "Modem gRPC server is running on "+server_address);
+    std::string   server_address;
+    ServerBuilder builder;
+    ModemCommunicationServiceImpl service;
+    std::unique_ptr<Server> server;
+    
+    try{
+    
+        server_address = read_server_address_from_config_file(config_path, "modem_server_address");
+        
+        builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+        builder.RegisterService(&service);
+        
+        server = builder.BuildAndStart();
+        
+        if (!server) 
+            throw std::runtime_error("Failed to start the Modem server.");
+
+    }catch (std::exception& e) {
+        logger.log(CRITICAL, std::string("Modem gRPC-server failed to start -> ") + e.what());
+        throw; // propagation
+    }
+    
+    logger.log(INFO, "Modem gRPC server is running on " + server_address);
 
     while (server_running) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));  // Pauza da server ne opterećuje CPU
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
     logger.log(INFO, "Modem gRPC server is shutting down.");
