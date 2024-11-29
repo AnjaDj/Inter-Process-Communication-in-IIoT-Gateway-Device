@@ -1,0 +1,5 @@
+{
+    "contact_number": 896,
+    "main_server_address": "127.0.0.1:50051",
+    "modem_server_address": "127.0.0.1:50052"
+}
