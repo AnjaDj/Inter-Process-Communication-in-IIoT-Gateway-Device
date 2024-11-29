@@ -21,7 +21,7 @@ or to send D-Bus message to Camera
 import grpc
 import time
 import logging
-import config_data
+import config
 import modemCommunication_pb2
 import modemCommunication_pb2_grpc
 import objectProximityDetectionService_pb2
@@ -37,7 +37,7 @@ logging.basicConfig(filename='main.log',
                     format='%(asctime)s - %(levelname)s - %(message)s')
                     
 # path to the config file in JSON format                    
-config_path = "config.json"
+config_path = "config_main.json"
 
 class ObjectProximityDetectionServiceServicer(objectProximityDetectionService_pb2_grpc.ObjectProximityDetectionServiceServicer):
     def ObjectProximityDetection(self, request, context):
@@ -55,7 +55,7 @@ class ObjectProximityDetectionServiceServicer(objectProximityDetectionService_pb
             logging.info("Object Detected. Main gRPC-client sends gRPC-request to modem gRPC-server.")
             print("Object Detected. Main gRPC-client sends gRPC-request to modem gRPC-server.\n")
             
-            number = config_data.read_contact_number_from_config_file(config_path)
+            number = config.read_contact_number_from_config_file(config_path)
             
             request_for_modem   = modemCommunication_pb2.ModemCommunicationRequest(message="Object Detected",contact_number=number)
             reply_from_modem    = stub.ModemCommunication(request_for_modem)
@@ -76,13 +76,17 @@ class ObjectProximityDetectionServiceServicer(objectProximityDetectionService_pb
     :return: None
 """
 def serve_ADC():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    objectProximityDetectionService_pb2_grpc.add_ObjectProximityDetectionServiceServicer_to_server(ObjectProximityDetectionServiceServicer(), server)
-    
-    main_server_address = config_data.read_server_address_from_config_file(config_path, 'main')
-    
-    server.add_insecure_port(main_server_address)
-    server.start()
+    try:
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        objectProximityDetectionService_pb2_grpc.add_ObjectProximityDetectionServiceServicer_to_server(ObjectProximityDetectionServiceServicer(), server)
+        
+        main_server_address = config.read_server_address_from_config_file(config_path, 'main')
+        
+        server.add_insecure_port(main_server_address)
+        server.start()
+    except Exception as e:
+        logging.critical(f"Main gRPC-server failed to start -> {e}")
+        raise
     
     logging.info(f"Main gRPC-server is running on {main_server_address}")
     print(f"Main gRPC-server is running on {main_server_address}\n")
@@ -90,7 +94,6 @@ def serve_ADC():
     try:
         while True:
             time.sleep(86400)  # Keep server active one day
-            
     except KeyboardInterrupt:
         logging.info("Main gRPC-server is shuting down.")
         print("Main gRPC-server is shuting down.\n")
@@ -103,12 +106,19 @@ def serve_ADC():
     :return: None
 """
 def use_MODEM():
-    global stub, channel
-    
-    modem_server_address = config_data.read_server_address_from_config_file(config_path, 'modem')
-    
-    channel = grpc.insecure_channel(modem_server_address)
-    stub = modemCommunication_pb2_grpc.ModemCommunicationServiceStub(channel)
+    try:
+        logging.info("Main gRPC-client trying to connect with Modem gRPC-server...")
+        global stub, channel
+        
+        modem_server_address = config.read_server_address_from_config_file(config_path, 'modem')
+        
+        channel = grpc.insecure_channel(modem_server_address)
+        stub    = modemCommunication_pb2_grpc.ModemCommunicationServiceStub(channel)
+        logging.info(f"Main gRPC-client connected to the Modem gRPC-server running on {modem_server_address}.")
+        
+    except Exception as e:
+        logging.critical(f"Main gRPC-client failed to connect with Modem gRPC-server: {e}")
+        raise
 
 
 use_MODEM()
