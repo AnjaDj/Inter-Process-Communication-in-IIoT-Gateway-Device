@@ -44,7 +44,9 @@ def read_server_address_from_config_file(file_path, server):
             server_address = configuration.get("main_server_address")
         elif server == 'modem':
             server_address = configuration.get("modem_server_address")
-
+        else:
+            raise ValueError(f"Invalid key-search format in '{file_path}' file.")
+            
         return server_address
 
     except FileNotFoundError:
