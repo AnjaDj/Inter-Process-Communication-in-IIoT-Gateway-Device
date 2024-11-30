@@ -20,7 +20,7 @@ import time
 import grpc
 import logging
 import threading
-import config_data
+import config
 import objectProximityDetectionService_pb2
 import objectProximityDetectionService_pb2_grpc
 
@@ -30,10 +30,10 @@ logging.basicConfig(filename='ADC.log',
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # path to the config file in JSON format                    
-config_path = "config.json"
+config_path = "config_adc.json"
 
 ADC_DRIVER_DEVICE = "/dev/ADC_driver"	# device path to the driver file
-end_program = False 					# flag to end the program
+main_server_address = None
 channel     = None
 adc_fd      = None						# file descriptor
 stub        = None
@@ -105,8 +105,8 @@ def read_adc(fd, num_bytes):
 """
 def sensor_run():
     
-    global adc_fd, stub, channel, end_program    # Access global variables
-    THRESHOLD = 0x00000401 				         # Define the threshold for detecting objects at any distance
+    global adc_fd, stub, channel   # Access global variables
+    THRESHOLD = 0x00000401 		   # Define the threshold for detecting objects at any distance
 
     # Open ADC driver
     adc_fd = open_driver(ADC_DRIVER_DEVICE)
@@ -126,7 +126,7 @@ def sensor_run():
         close_driver(adc_fd)
         
         
-    while not end_program:
+    while True:
         data = read_adc(adc_fd, 4)
 
         if data > THRESHOLD:
@@ -144,6 +144,66 @@ def sensor_run():
     close_driver(adc_fd)
 			
 
+def test():
+    global stub, channel  
+    data = 1500				            
+
+    try:
+        while True:
+            logging.info(f"Object Detected: ADC gRPC-client sends gRPC-request to Main gRPC-server. Message: object_proximity_distance = {data}")
+                
+            request  = objectProximityDetectionService_pb2.ObjectProximityDetectionRequest(message="Object Detected",object_proximity_distance=data)
+            reply    = stub.ObjectProximityDetection(request)
+                
+            logging.info(f"ADC gRPC-client received gRPC-reply from Main gRPC-server: {reply.message}")
+            
+            time.sleep(5)
+    except KeyboardInterrupt:
+        logging.info("ADC gRPC-client is shuting down.")
+        channel.close()
+        return   
+
+def use_MAIN(max_retries=3):
+    
+    attempt = 1
+    while attempt <= max_retries:
+        try:
+            global stub, channel, main_server_address
+            
+            main_server_address = config.get_config(config_path, 'main')
+            connection_time     = config.get_config(config_path, 'connection_time')
+            
+            logging.info(f"ADC gRPC-client trying to connect to the Main gRPC-server running on {main_server_address}...")
+            
+            # Creates channel
+            channel = grpc.insecure_channel(main_server_address)
+            # Checks if channel is ready for communication
+            grpc.channel_ready_future(channel).result(timeout=connection_time)
+            # Stub creating
+            stub    = objectProximityDetectionService_pb2_grpc.ObjectProximityDetectionServiceStub(channel)
+            
+            logging.info(f"ADC gRPC-client connected to the Main gRPC-server running on {main_server_address}.")
+            return
+            
+        except grpc.FutureTimeoutError:
+            logging.error(f"Timeout limit exceeded. ADC gRPC-client couldnt establish connection with Main gRPC-server running on {main_server_address}")
+        except grpc.RpcError as e:
+            logging.error(f"RPC error occurred at ADC - MAIN line : {e.code()} - {e.details()}")
+        except Exception as e:
+            logging.error(f"ADC gRPC-client failed to connect to the Main gRPC-server running on {main_server_address}: {e}")
+            
+        attempt += 1
+        
+        if attempt <= max_retries:
+            logging.warning(f"ADC Retrying to connect to the Main gRPC-server running on {main_server_address} in 3 seconds...")
+            time.sleep(3)
+        else:
+            logging.critical(f"ADC reached max connection retries. Unable to connect to the Main gRPC-server running on {main_server_address}  after multiple attempts")
+            if 'channel' in globals() and channel is not None:
+                channel.close()
+            raise RuntimeError("ADC failed to connect to the Main gRPC-server after multiple attempts.")
+        
+use_MAIN()
 # Start a thread to handle sensor data
-sensor_thread = threading.Thread(target=sensor_run)
+sensor_thread = threading.Thread(target=test)
 sensor_thread.start()
