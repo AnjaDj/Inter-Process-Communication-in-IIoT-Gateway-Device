@@ -1,0 +1,13 @@
+[Unit]
+Description=Python Script Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/anja/Kernel-Space-Driver-Development-and-gRPC-Based-Communication-edit/ADC.py
+Restart=always
+User=anja
+WorkingDirectory=/home/anja/Kernel-Space-Driver-Development-and-gRPC-Based-Communication-edit/
+Environment="PATH=/usr/bin"
+
+[Install]
+WantedBy=multi-user.target

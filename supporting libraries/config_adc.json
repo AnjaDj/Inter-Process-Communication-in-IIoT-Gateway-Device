@@ -1,6 +1,7 @@
 {
     "main_server_address": "127.0.0.1:50051",
-    "connection_time": 10
+    "connection_time": 10,
+    "threshold"      : 1000
 }
 
 
