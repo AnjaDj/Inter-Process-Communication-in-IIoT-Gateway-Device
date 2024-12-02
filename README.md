@@ -53,3 +53,41 @@ Prerequisites<br>
    create new directory `myproject` containing .proto file and source .py code<br>
 5. Run the project<br>
    from project directory `myproject` in terminal run `python3 app.py`
+
+
+
+# From Python script to Linux service using <b>systemd</b>
+Automatic starting and managing script as Linux service
+  
+1. Write Python script `/path/to/your_script.py`
+2. Make script executable
+   ```bash
+   chmod +x /path/to/your_script.py
+4. Create systemd service file in directory `/etc/systemd/system/`
+   ```bash
+   sudo nano /etc/systemd/system/your_script.service
+5. Add following content to the .service file
+   ```bash
+   [Unit]
+   Description=Python Script Service
+   After=network.target
+   
+   [Service]
+   ExecStart=/usr/bin/python3 /path/to/your_script.py
+   Restart=always
+   User=your_user
+   WorkingDirectory=/path/to/
+   Environment="PATH=/usr/bin"
+   
+   [Install]
+   WantedBy=multi-user.target
+
+6. Reload systemd to recognise new service
+   ```bash
+   sudo systemctl daemon-reload
+8. Enable new service at system startup
+   ```bash
+   sudo systemctl enable your_script.service
+10. Run service
+    ```bash
+    sudo systemctl start your_script.service
