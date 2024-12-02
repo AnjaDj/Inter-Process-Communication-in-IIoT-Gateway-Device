@@ -57,7 +57,7 @@ Prerequisites<br>
 
 
 # From Python script to Linux service using <b>systemd</b>
-Services will start automatically every time the system starts, which eliminates the need to start it manually. Scripts that <br>
+Services will start automatically every time the system starts, which eliminates the need to start it manually. Scripts that
 collect data, represent servers or similar are ideal candidates to be configured as services and not ordinary scripts.<br>
   
 1. Write Python script you want to make as service `/path/to/your_script.py`
