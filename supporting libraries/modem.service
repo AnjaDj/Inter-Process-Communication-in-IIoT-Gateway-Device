@@ -1,0 +1,11 @@
+[Unit]
+Description=My C++ Service
+After=network.target
+
+[Service]
+ExecStart=/home/anja/grpc-cpp/grpc/examples/cpp/modemCommunication/cmake/build/modem
+Restart=always
+User=anja
+
+[Install]
+WantedBy=multi-user.target
