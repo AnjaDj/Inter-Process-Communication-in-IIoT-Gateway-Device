@@ -1,4 +1,4 @@
-# gRPC
+# 🔸 gRPC
 ## Build and locally install gRPC and Protocol Buffers for C++
 Prerequisites<br>
  - cmake 3.16 or later (https://vitux.com/how-to-install-cmake-on-ubuntu/)
@@ -56,7 +56,7 @@ Prerequisites<br>
 
 
 
-# From Python script to Linux service using <b>systemd</b>
+# 🔸 From Python script to Linux service using <b>systemd</b>
 Services will start automatically every time the system starts, which eliminates the need to start it manually. Scripts that
 collect data, represent servers or similar are ideal candidates to be configured as services and not ordinary scripts.<br>
   
