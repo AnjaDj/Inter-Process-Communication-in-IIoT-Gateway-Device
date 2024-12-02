@@ -57,15 +57,16 @@ Prerequisites<br>
 
 
 # From Python script to Linux service using <b>systemd</b>
-Automatic starting and managing script as Linux service
+Services will start automatically every time the system starts, which eliminates the need to start it manually. Scripts that <br>
+collect data, represent servers or similar are ideal candidates to be configured as services and not ordinary scripts.<br>
   
 1. Write Python script you want to make as service `/path/to/your_script.py`
 2. Make your Python script executable
    ```bash
-   chmod +x /path/to/your_script.py
+   ~$ chmod +x /path/to/your_script.py
 4. Create systemd service file in directory `/etc/systemd/system/`.  Systemd service files need to be in `/etc/systemd/system/` DIR!
    ```bash
-   sudo nano /etc/systemd/system/your_script.service
+   ~$ sudo nano /etc/systemd/system/your_script.service
 5. Add following content to your .service file
    ```bash
    [Unit]
@@ -91,3 +92,13 @@ Automatic starting and managing script as Linux service
 10. Run service
     ```bash
     sudo systemctl start your_script.service
+11. Managing the service
+    - stop service
+      ```bash
+      sudo systemctl stop your_script.service
+    - restart service
+      ```bash
+      sudo systemctl stop your_script.service
+    - disable service at system startup
+      ```bash
+      sudo systemctl disable your_script.service
