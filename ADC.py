@@ -30,13 +30,34 @@ logging.basicConfig(filename='ADC.log',
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # path to the config file in JSON format                    
-config_path = "config_adc.json"
-
-ADC_DRIVER_DEVICE = "/dev/ADC_driver"	# device path to the driver file
-main_server_address = None
-channel     = None
+config_path       = "config_adc.json"
+ADC_DRIVER_DEVICE = "/dev/ADC_driver"	# device path to the driver file                          
 adc_fd      = None						# file descriptor
-stub        = None
+channel     = None                      # for communication with Main server
+stub        = None                      # for communication with Main server
+
+# global configuration data
+main_server_address  = None
+connection_time      = None
+threshold            = None
+
+"""
+    Gets configuration data
+
+    :param : None
+    :return: None
+"""
+def get_configs():
+    global main_server_address, connection_time, threshold
+    
+    try:
+        main_server_address  = config.get_config(config_path, 'main')
+        connection_time      = config.get_config(config_path, 'connection_time')
+        threshold            = config.get_config(config_path, 'threshold')
+    except Exception as e:
+        logging.critical(f"An error occurred while getting config data: {e}")
+        raise
+
 
 """
     Opens driver and returns file descriptor (fd)
@@ -48,12 +69,10 @@ def open_driver(device_path):
     try:
         fd = os.open(device_path, os.O_RDWR) 
         logging.info(f"Driver {device_path} opened successfully. File descriptor: {fd}.")
-        print(f"Driver {device_path} opened successfully. File descriptor: {fd}.\n")
         return fd
     except OSError as e:
         logging.critical(f"Failed to open driver {device_path}: {e}.")
-        print(f"Failed to open driver {device_path}: {e}.\n")
-        return None
+        raise
 
 
 """
@@ -65,10 +84,10 @@ def close_driver(fd):
     try:
         os.close(fd)
         logging.info(f"Driver {fd} closed successfully.")
-        print(f"Driver {fd} closed successfully.\n")
     except OSError as e:
         logging.critical(f"Failed to close driver {fd}: {e}.")
-        print(f"Failed to close driver {fd}: {e}.\n")
+        raise
+
 
 
 """
@@ -87,12 +106,10 @@ def read_adc(fd, num_bytes):
         data_num = int.from_bytes(data_raw, byteorder='little')  # little-endian format
 
         logging.info(f"Data received from ADC: {data_num}.")
-        print(f"Data received from ADC: {data_num}.\n")
         return data_num
         
     except OSError as e:
         logging.error(f"Failed to receive data from ADC: {e}.")
-        print(f"Failed to receive data from ADC: {e}.\n")
         return None
 
 
@@ -105,44 +122,33 @@ def read_adc(fd, num_bytes):
 """
 def sensor_run():
     
-    global adc_fd, stub, channel   # Access global variables
-    THRESHOLD = 0x00000401 		   # Define the threshold for detecting objects at any distance
+    global adc_fd, stub, channel, threshold   # Access global variables
 
-    # Open ADC driver
-    adc_fd = open_driver(ADC_DRIVER_DEVICE)
-    if adc_fd is None:
-        return 
-        
-    # Connect to the local Main gRPC-server    
-    server_address = config_data.read_server_address_from_config_file(config_path, 'main')
-    
+    # Opens ADC driver
     try:
-        channel = grpc.insecure_channel(server_address)
-        stub    = objectProximityDetectionService_pb2_grpc.ObjectProximityDetectionServiceStub(channel)
-    except grpc.RpcError as e:
-        logging.critical(f"ADC gRPC-client failed to connect to the Main gRPC-server: {e}")
-        print(f"ADC gRPC-client failed to connect to the Main gRPC-server: {e}\n")
-    finally:
-        close_driver(adc_fd)
-        
-        
-    while True:
-        data = read_adc(adc_fd, 4)
+        adc_fd = open_driver(ADC_DRIVER_DEVICE)
+    except Exception:
+        raise
+     
+    try:    
+        while True:
+            data = read_adc(adc_fd, 4)
 
-        if data > THRESHOLD:
-            logging.info("Object Detected. ADC gRPC-client sends gRPC-request to Main gRPC-server.")
-            print("Object Detected. ADC gRPC-client sends gRPC-request to Main gRPC-server.\n")
+            if data > threshold:
+                logging.info(f"Object Detected: ADC client sends request to Main server. distance = {data}")
+                
+                request  = objectProximityDetectionService_pb2.ObjectProximityDetectionRequest(message="Object Detected",object_proximity_distance=data)
+                reply    = stub.ObjectProximityDetection(request)
+                    
+                logging.info(f"ADC client received reply from Main server: {reply.message}")
             
-            request  = objectProximityDetectionService_pb2.ObjectProximityDetectionRequest(message="Object Detected",object_proximity_distance=data)
-            reply    = stub.ObjectProximityDetection(request)
-            
-            logging.info(f"ADC gRPC client received gRPC-reply from Main gRPC-server: {reply.message}")
-            print(f"ADC gRPC client received gRPC-reply from Main gRPC-server: {reply.message}\n")
-        
-        time.sleep(100 / 1000) #100ms
-    
-    close_driver(adc_fd)
-			
+            time.sleep(5)
+                
+    except KeyboardInterrupt:
+        logging.info("ADC client is shuting down.")
+        close_driver(adc_fd)
+        channel.close()
+        return  
 
 def test():
     global stub, channel  
@@ -150,30 +156,33 @@ def test():
 
     try:
         while True:
-            logging.info(f"Object Detected: ADC gRPC-client sends gRPC-request to Main gRPC-server. Message: object_proximity_distance = {data}")
+            logging.info(f"Object Detected: ADC client sends request to Main server. Message: object_proximity_distance = {data}")
                 
             request  = objectProximityDetectionService_pb2.ObjectProximityDetectionRequest(message="Object Detected",object_proximity_distance=data)
             reply    = stub.ObjectProximityDetection(request)
                 
-            logging.info(f"ADC gRPC-client received gRPC-reply from Main gRPC-server: {reply.message}")
+            logging.info(f"ADC client received reply from Main server: {reply.message}")
             
             time.sleep(5)
     except KeyboardInterrupt:
-        logging.info("ADC gRPC-client is shuting down.")
+        logging.info("ADC client is shuting down.")
         channel.close()
         return   
 
+"""
+    Connects to the local main gRPC server
+    
+    :param max_retries: Max number of connection retries 
+    :return: None
+"""
 def use_MAIN(max_retries=3):
     
     attempt = 1
+    global stub, channel, main_server_address, connection_time
+    
     while attempt <= max_retries:
         try:
-            global stub, channel, main_server_address
-            
-            main_server_address = config.get_config(config_path, 'main')
-            connection_time     = config.get_config(config_path, 'connection_time')
-            
-            logging.info(f"ADC gRPC-client trying to connect to the Main gRPC-server running on {main_server_address}...")
+            logging.info(f"ADC client trying to connect to the Main server...")
             
             # Creates channel
             channel = grpc.insecure_channel(main_server_address)
@@ -182,28 +191,27 @@ def use_MAIN(max_retries=3):
             # Stub creating
             stub    = objectProximityDetectionService_pb2_grpc.ObjectProximityDetectionServiceStub(channel)
             
-            logging.info(f"ADC gRPC-client connected to the Main gRPC-server running on {main_server_address}.")
+            logging.info(f"ADC client connected to the Main server running on {main_server_address}.")
             return
             
         except grpc.FutureTimeoutError:
-            logging.error(f"Timeout limit exceeded. ADC gRPC-client couldnt establish connection with Main gRPC-server running on {main_server_address}")
+            logging.error(f"Timeout limit exceeded. ADC client couldnt establish connection with Main server running on {main_server_address}")
         except grpc.RpcError as e:
             logging.error(f"RPC error occurred at ADC - MAIN line : {e.code()} - {e.details()}")
         except Exception as e:
-            logging.error(f"ADC gRPC-client failed to connect to the Main gRPC-server running on {main_server_address}: {e}")
+            logging.error(f"ADC client failed to connect to the Main server running on {main_server_address}: {e}")
             
         attempt += 1
         
         if attempt <= max_retries:
-            logging.warning(f"ADC Retrying to connect to the Main gRPC-server running on {main_server_address} in 3 seconds...")
+            logging.warning(f"ADC Retrying to connect to the Main server running on {main_server_address} in 3 seconds...")
             time.sleep(3)
         else:
-            logging.critical(f"ADC reached max connection retries. Unable to connect to the Main gRPC-server running on {main_server_address}  after multiple attempts")
+            logging.critical(f"ADC reached max connection retries. Unable to connect to the Main server running on {main_server_address}  after multiple attempts!")
             if 'channel' in globals() and channel is not None:
                 channel.close()
-            raise RuntimeError("ADC failed to connect to the Main gRPC-server after multiple attempts.")
-        
+            raise RuntimeError("ADC failed to connect to the Main server after multiple attempts.")
+
+get_configs()        
 use_MAIN()
-# Start a thread to handle sensor data
-sensor_thread = threading.Thread(target=test)
-sensor_thread.start()
+test()
