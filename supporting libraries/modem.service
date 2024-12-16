@@ -6,6 +6,8 @@ After=network.target
 ExecStart=/home/anja/grpc-cpp/grpc/examples/cpp/modemCommunication/cmake/build/modem
 Restart=always
 User=anja
+WorkingDirectory=/home/anja/grpc-cpp/grpc/examples/cpp/modemCommunication/cmake/build/
+Environment="PATH=/usr/bin"
 
 [Install]
 WantedBy=multi-user.target
