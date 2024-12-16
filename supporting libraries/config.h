@@ -5,7 +5,7 @@
 
 using json = nlohmann::json;
 
-std::string read_server_address_from_config_file(const std::string& filePath, const std::string& server) {
+std::string read_server_address_from_config_file(const std::string& filePath, const std::string& key) {
     try {
         // Opens file
         std::ifstream file(filePath);
@@ -17,10 +17,10 @@ std::string read_server_address_from_config_file(const std::string& filePath, co
         json config;
         file >> config;
 
-        if (config.contains(server) && config[server].is_string())
-            return config[server].get<std::string>();
+        if (config.contains(key) && config[key].is_string())
+            return config[key].get<std::string>();
         else
-            throw std::runtime_error("Key '" + server + "' not found or not a string in "+filePath);
+            throw std::runtime_error("Value error: '" + key + "' not found or is in wrong format in "+filePath);
     }catch(std::exception& e){
         throw;
     }
