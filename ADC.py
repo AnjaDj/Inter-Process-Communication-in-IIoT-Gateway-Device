@@ -163,11 +163,12 @@ def test():
                 
             logging.info(f"ADC client received reply from Main server: {reply.message}")
             
-            time.sleep(5)
+            time.sleep(100)
     except KeyboardInterrupt:
         logging.info("ADC client is shuting down.")
         channel.close()
         return   
+        
 
 """
     Connects to the local main gRPC server
