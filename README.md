@@ -137,23 +137,12 @@ If you are developing an application on standard x86_64 PC and want it to run on
    If you are using CMake add following in CMakeLists.txt or in command line
    ```bash
    cmake -DCMAKE_SYSTEM_NAME=Linux \
-      -DCMAKE_SYSTEM_PROCESSOR=arm \
-      -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
-      -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
-      -DCMAKE_SYSROOT=$SYSROOT \
-      -DCMAKE_FIND_ROOT_PATH=$SYSROOT \
-      -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-      -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-      -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
-      -B build -S .
-  If you are using Makefile, add
-  ```bash
-  CC=arm-linux-gnueabihf-gcc
-  CXX=arm-linux-gnueabihf-g++
-  SYSROOT=/path/to/sysroot
-
-  CFLAGS=--sysroot=$(SYSROOT)
-  LDFLAGS=--sysroot=$(SYSROOT)
-
-  all:
-	 	$(CC) $(CFLAGS) -o my_app main.c
+         -DCMAKE_SYSTEM_PROCESSOR=arm \
+         -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
+         -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
+         -DCMAKE_SYSROOT=$SYSROOT \
+         -DCMAKE_FIND_ROOT_PATH=$SYSROOT \
+         -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+         -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+         -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+         -B build -S .
