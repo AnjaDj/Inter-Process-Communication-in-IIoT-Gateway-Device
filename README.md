@@ -146,3 +146,7 @@ If you are developing an application on standard x86_64 PC and want it to run on
          -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
          -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
          -B build -S .
+   
+7. <b> Compile application</b><br>
+   ```bash
+   cmake --build build
