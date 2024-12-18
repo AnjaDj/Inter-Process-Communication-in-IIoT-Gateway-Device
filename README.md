@@ -150,3 +150,11 @@ If you are developing an application on standard x86_64 PC and want it to run on
 7. <b> Compile application</b><br>
    ```bash
    cmake --build build
+
+8. <b> Transfer binaries to RPi via `scp`</b><br>
+   ```bash
+   scp build/my_app pi@<RPi_IP>:/home/pi/
+
+9. <b> Run app on RPi</b><br>
+   ```bash
+   ./my_app
