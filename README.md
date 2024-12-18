@@ -104,7 +104,7 @@ A daemon (or service) is a background process that is designed to run autonomous
 
 
 # 🔸 Cross-compilation
-If you are developing an application on standard x86_64 PC and want it to run on RPi with complitly different architecture than your PC, you need to cross-compile it. On your x86_64 Linux PC:
+Cross-compilation is the process of building code for a target other than the one running the build process. If you are developing an application on standard x86_64 PC and want it to run on RPi with complitly different architecture than your PC, you need to cross-compile it. On your x86_64 Linux PC:
 1. <b>Install toolchain for cross-compilation </b><br>
    The following commands will install a compiler for ARM architecture used in RPi
    ```bash
@@ -165,3 +165,33 @@ If you are developing an application on standard x86_64 PC and want it to run on
 11. <b> Run app on RPi</b><br>
     ```bash
     ./executable_name
+
+# 🔸 Natively build a Linux kernel on RPi 3B<br>
+Complete quidance on : https://www.raspberrypi.com/documentation/computers/linux_kernel.html#install-directly-onto-the-sd-card.<br>
+This guide assumes that your Raspberry Pi runs the latest version of Raspberry Pi OS
+  `sudo apt install git`<br>
+  `git clone --depth=1 https://github.com/raspberrypi/linux`
+
+1. Install the build dependencies <br>
+   `sudo apt install bc bison flex libssl-dev make`
+2. Build configuration<br>
+   In this case, Im using RPi3B and for 32bit distribution run following commands
+   ```bash
+   cd linux
+   KERNEL=kernel7
+   make bcm2709_defconfig
+3. Build the 32-bit kernel<br>
+   `make -j6 zImage modules dtbs`
+4. Install the kernel modules onto the boot media<br>
+   `sudo make -j6 modules_install`
+5. Create a backup of your current kernel and install the fresh kernel image
+   ```bash
+   sudo cp /boot/firmware/$KERNEL.img /boot/firmware/$KERNEL-backup.img
+   sudo cp arch/arm/boot/zImage /boot/firmware/$KERNEL.img
+6. For kernels version 6.5 and above<br>
+   `sudo cp arch/arm/boot/dts/broadcom/*.dtb /boot/firmware/`
+7. Copy over the overlays and README
+   ```bash
+   sudo cp arch/arm/boot/dts/overlays/*.dtb* /boot/firmware/overlays/
+   sudo cp arch/arm/boot/dts/overlays/README /boot/firmware/overlays/
+8. Finally, run the following command to reboot your Raspberry Pi and run your freshly-compiled kernel `sudo reboot`
