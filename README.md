@@ -168,7 +168,7 @@ Cross-compilation is the process of building code for a target other than the on
 
 # 🔸 Natively build a Linux kernel on RPi 3B<br>
 Complete quidance on : https://www.raspberrypi.com/documentation/computers/linux_kernel.html#install-directly-onto-the-sd-card.<br>
-This guide assumes that your Raspberry Pi runs the latest version of Raspberry Pi OS
+This guide assumes that your Raspberry Pi runs the latest version of Raspberry Pi OS. <br>
   `sudo apt install git`<br>
   `git clone --depth=1 https://github.com/raspberrypi/linux`
 
