@@ -180,7 +180,7 @@ This guide assumes that your Raspberry Pi runs the latest version of Raspberry P
    cd linux
    KERNEL=kernel7
    make bcm2709_defconfig
-3. Build the 32-bit kernel<br>
+3. Build the 32-bit kernel (this step will take A LONG TIME -couple of hours)<br>
    `make -j6 zImage modules dtbs`
 4. Install the kernel modules onto the boot media<br>
    `sudo make -j6 modules_install`
