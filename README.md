@@ -101,3 +101,31 @@ A daemon (or service) is a background process that is designed to run autonomous
     - disable service at system startup
       ```bash
       sudo systemctl disable your_script.service
+
+
+# 🔸 Cross-compilation
+If you are developing an application on standard x86_64 PC and want it to run on RPi with complitly different architecture than your PC, you need to cross-compile it. On your x86_64 Linux PC:
+1. <b>Install toolchain for cross-compilation </b><br>
+   The following commands will install a compiler for ARM architecture used in RPi
+   ```bash
+   sudo apt update
+   sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+2. <b>Download Linux kernel source code </b><br>
+   ```bash
+   git clone --depth=1 https://github.com/raspberrypi/linux -b rpi-6.6.y
+   cd linux
+3. <b>Configure Linux kernel for cross-compiling</b><br>
+   This will generate `.config` file for RPi3 kernel
+   ```bash
+   make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2709_defconfig
+4. <b>Download booklet for RPi</b><br>
+   ```bash
+   rsync -avz pi@<RPi_IP>:/lib ./sysroot
+   rsync -avz pi@<RPi_IP>:/usr ./sysroot
+   
+5. <b>Configure sysroot</b><br>
+  Creating sysroot on your PC
+  ```bash
+  export SYSROOT=$(pwd)/sysroot
+  export CC="arm-linux-gnueabihf-gcc --sysroot=$SYSROOT"
+  export CXX="arm-linux-gnueabihf-g++ --sysroot=$SYSROOT"
