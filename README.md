@@ -110,30 +110,37 @@ If you are developing an application on standard x86_64 PC and want it to run on
    ```bash
    sudo apt update
    sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+
+2. <b> At the end of a .bashrc file, add following </b><br>
+    ```bash
+    export ARCH=arm
+    export CROSS_COMPILE=arm-linux-gnueabihf
+
+3. <b> Run `. ~/.bashrc` or log again in order to update $PATH
    
-2. <b>Download Linux kernel source code </b><br>
+4. <b>Download Linux kernel source code </b><br>
    ```bash
    git clone --depth=1 https://github.com/raspberrypi/linux -b rpi-6.6.y
    cd linux
 
-3. <b>Configure Linux kernel for cross-compiling</b><br>
+5. <b>Configure Linux kernel for cross-compiling</b><br>
    This will generate `.config` file for RPi3 kernel
    ```bash
    make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2709_defconfig
    
-4. <b>Download booklet for RPi</b><br>
+6. <b>Download booklet for RPi</b><br>
    ```bash
    rsync -avz pi@<RPi_IP>:/lib ./sysroot
    rsync -avz pi@<RPi_IP>:/usr ./sysroot
    
-5. <b>Configure sysroot</b><br>
+7. <b>Configure sysroot</b><br>
    Creating sysroot on your PC
    ```bash
    export SYSROOT=$(pwd)/sysroot
    export CC="arm-linux-gnueabihf-gcc --sysroot=$SYSROOT"
    export CXX="arm-linux-gnueabihf-g++ --sysroot=$SYSROOT"
    
-6. <b>Create CMake</b><br>
+8. <b>Create CMake</b><br>
    If you are using CMake add following in CMakeLists.txt or in command line
    ```bash
    cmake -DCMAKE_SYSTEM_NAME=Linux \
@@ -147,14 +154,14 @@ If you are developing an application on standard x86_64 PC and want it to run on
          -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
          -B build -S .
    
-7. <b> Compile application</b><br>
+9. <b> Compile application</b><br>
    ```bash
    cmake --build build
 
-8. <b> Transfer binaries to RPi via `scp`</b><br>
-   ```bash
-   scp build/my_app pi@<RPi_IP>:/home/pi/
+10. <b> Transfer binaries to RPi via `scp`</b><br>
+    ```bash
+    scp build/executable_name pi@<RPi_IP>:/home/pi/
 
-9. <b> Run app on RPi</b><br>
-   ```bash
-   ./my_app
+11. <b> Run app on RPi</b><br>
+    ```bash
+    ./executable_name
