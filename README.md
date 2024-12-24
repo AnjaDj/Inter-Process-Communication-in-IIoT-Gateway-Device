@@ -1,5 +1,5 @@
 # 🔸 gRPC
-## Build and locally install gRPC and Protocol Buffers for C++
+## Build and locally install gRPC and Protocol Buffers for C++ on Ubuntu x86_64 6.8.0-49-generic
 Prerequisites<br>
  - cmake 3.16 or later (https://vitux.com/how-to-install-cmake-on-ubuntu/)
 1. Configures a directory for locally installed packages and ensures the executables are easily accessible from the command line<br>
@@ -38,7 +38,7 @@ Prerequisites<br>
     ```bash
     ~/grpc/examples/cpp/myproject/cmake/build$ ./app
 
-## Build and locally install gRPC and Protocol Buffers for Python
+## Build and locally install gRPC and Protocol Buffers for Python on Ubuntu x86_64 6.8.0-49-generic
 Prerequisites<br>
  - Python 3.7 or higher
  - pip version 9.0.1 or higher
@@ -102,69 +102,6 @@ A daemon (or service) is a background process that is designed to run autonomous
       ```bash
       sudo systemctl disable your_script.service
 
-
-# 🔸 Cross-compilation
-Cross-compilation is the process of building code for a target other than the one running the build process. If you are developing an application on standard x86_64 PC and want it to run on RPi with complitly different architecture than your PC, you need to cross-compile it. On your x86_64 Linux PC:
-1. <b>Install toolchain for cross-compilation </b><br>
-   The following commands will install a compiler for ARM architecture used in RPi
-   ```bash
-   sudo apt update
-   sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-
-2. <b> At the end of a .bashrc file, add following </b><br>
-    ```bash
-    export ARCH=arm
-    export CROSS_COMPILE=arm-linux-gnueabihf
-
-3. <b> Run `. ~/.bashrc` or log again in order to update $PATH
-   
-4. <b>Download Linux kernel source code </b><br>
-   ```bash
-   git clone --depth=1 https://github.com/raspberrypi/linux -b rpi-6.6.y
-   cd linux
-
-5. <b>Configure Linux kernel for cross-compiling</b><br>
-   This will generate `.config` file for RPi3 kernel
-   ```bash
-   make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2709_defconfig
-   
-6. <b>Download booklet for RPi</b><br>
-   ```bash
-   rsync -avz pi@<RPi_IP>:/lib ./sysroot
-   rsync -avz pi@<RPi_IP>:/usr ./sysroot
-   
-7. <b>Configure sysroot</b><br>
-   Creating sysroot on your PC
-   ```bash
-   export SYSROOT=$(pwd)/sysroot
-   export CC="arm-linux-gnueabihf-gcc --sysroot=$SYSROOT"
-   export CXX="arm-linux-gnueabihf-g++ --sysroot=$SYSROOT"
-   
-8. <b>Create CMake</b><br>
-   If you are using CMake add following in CMakeLists.txt or in command line
-   ```bash
-   cmake -DCMAKE_SYSTEM_NAME=Linux \
-         -DCMAKE_SYSTEM_PROCESSOR=arm \
-         -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
-         -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
-         -DCMAKE_SYSROOT=$SYSROOT \
-         -DCMAKE_FIND_ROOT_PATH=$SYSROOT \
-         -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-         -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-         -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
-         -B build -S .
-   
-9. <b> Compile application</b><br>
-   ```bash
-   cmake --build build
-
-10. <b> Transfer binaries to RPi via `scp`</b><br>
-    ```bash
-    scp build/executable_name pi@<RPi_IP>:/home/pi/
-
-11. <b> Run app on RPi</b><br>
-    ```bash
-    ./executable_name
 
 # 🔸 Natively build a Linux kernel on RPi 3B<br>
 Complete quidance on : https://www.raspberrypi.com/documentation/computers/linux_kernel.html#install-directly-onto-the-sd-card.<br>
