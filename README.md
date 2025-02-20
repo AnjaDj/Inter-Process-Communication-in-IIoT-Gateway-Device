@@ -21,9 +21,9 @@ After the download is complited, the `2024-11-19-raspios-bookworm-arm64.img.xz` 
    ```bash
    xzcat /path/to/2024-11-19-raspios-bookworm-arm64.img.xz | sudo dd bs=1M of=/dev/sdb
 
-4. Now 64bit RPi OS is flashed to your SD card. Eject it from PC and insert it into RPi 3B device.
+4. Now 64bit RPi OS is flashed to your SD card. Eject it from PC and insert it into RPi 3B device.<br>
 
-
+For more detailed information about this topic, visit `https://www.ipfire.org/docs/installation/howto_flash_arm_image`<br>
 
 # 🔸 Natively build a Linux kernel on RPi 3B<br>
 Complete quidance on : https://www.raspberrypi.com/documentation/computers/linux_kernel.html#install-directly-onto-the-sd-card.<br>
