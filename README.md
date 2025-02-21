@@ -27,33 +27,43 @@ For more detailed information about this topic, visit `https://www.ipfire.org/do
 
 # 🔸 Natively build a Linux kernel on RPi 3B<br>
 Complete quidance on : https://www.raspberrypi.com/documentation/computers/linux_kernel.html#install-directly-onto-the-sd-card.<br>
-This guide assumes that your Raspberry Pi runs the latest version of Raspberry Pi OS. <br>
-  `sudo apt install git`<br>
-  `git clone --depth=1 https://github.com/raspberrypi/linux`
+
+Download Git:<br>
+ `sudo apt install git`<br>
+
+Download kernel source. For a full list of available branches, see the `https://github.com/raspberrypi/linux`<br>
+ `git clone --depth=1 --branch <branch> https://github.com/raspberrypi/linux`
 
 1. Install the build dependencies <br>
    `sudo apt install bc bison flex libssl-dev make`
+
 2. Build configuration<br>
-   In this case, Im using RPi3B and for 32bit distribution run following commands
+   In this case, Im using RPi3B and for 64bit distribution
    ```bash
    cd linux
-   KERNEL=kernel7
-   make bcm2709_defconfig
-3. Build the 32-bit kernel (this step will take A LONG TIME -couple of hours)<br>
-   `make -j6 zImage modules dtbs`
+   KERNEL=kernel8
+   make bcm2711_defconfig
+
+3. Build the 64-bit kernel (this step will take A LONG TIME -couple of hours)<br>
+   `make -j6 Image.gz modules dtbs`
+
 4. Install the kernel modules onto the boot media<br>
    `sudo make -j6 modules_install`
-5. Create a backup of your current kernel and install the fresh kernel image
+   
+6. Create a backup of your current kernel and install the fresh kernel image
    ```bash
    sudo cp /boot/firmware/$KERNEL.img /boot/firmware/$KERNEL-backup.img
    sudo cp arch/arm/boot/zImage /boot/firmware/$KERNEL.img
-6. For kernels version 6.5 and above<br>
+   
+7. For kernels version 6.5 and above<br>
    `sudo cp arch/arm/boot/dts/broadcom/*.dtb /boot/firmware/`
-7. Copy over the overlays and README
+
+8. Copy over the overlays and README
    ```bash
    sudo cp arch/arm/boot/dts/overlays/*.dtb* /boot/firmware/overlays/
    sudo cp arch/arm/boot/dts/overlays/README /boot/firmware/overlays/
-8. Finally, run the following command to reboot your Raspberry Pi and run your freshly-compiled kernel `sudo reboot`
+
+9. Finally, run the following command to reboot your Raspberry Pi and run your freshly-compiled kernel `sudo reboot`
 
    
 # 🔸 gRPC
