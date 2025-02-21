@@ -115,7 +115,9 @@ Prerequisites<br>
     ```bash
     ~/grpc/examples/cpp/myproject/cmake/build$ ./app
 
-## Build and locally install gRPC and Protocol Buffers for Python on Ubuntu x86_64 6.8.0-49-generic
+### 🔹 Build and locally install gRPC and Protocol Buffers for Python
+![image](https://github.com/user-attachments/assets/6b3d902b-eead-412f-9f47-6627ca4bb850)
+
 Prerequisites<br>
  - Python 3.7 or higher
  - pip version 9.0.1 or higher
