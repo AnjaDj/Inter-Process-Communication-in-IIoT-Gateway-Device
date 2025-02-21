@@ -74,7 +74,9 @@ Finally, run the following command to reboot your Raspberry Pi and run your fres
 
    
 # 🔸 gRPC
-## Build and locally install gRPC and Protocol Buffers for C++ on Ubuntu x86_64 6.8.0-49-generic
+### 🔹 Build and locally install gRPC and Protocol Buffers for C++
+![image](https://github.com/user-attachments/assets/836ccef6-5714-4f28-9c56-bfc60e0e3f99)
+
 Prerequisites<br>
  - cmake 3.16 or later (https://vitux.com/how-to-install-cmake-on-ubuntu/)
 1. Configures a directory for locally installed packages and ensures the executables are easily accessible from the command line<br>
